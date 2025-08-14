@@ -1,4 +1,4 @@
-import { Schema } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 const userSchema = new Schema(
   {
@@ -11,10 +11,13 @@ const userSchema = new Schema(
       type: String,
       required: true,
     },
-    fullName: {
-      type: String,
-    },
     profile: {
+      fullName: {
+        type: String,
+      },
+      phoneNumber: {
+        type: String,
+      },
       bio: {
         type: String,
       },
@@ -24,12 +27,40 @@ const userSchema = new Schema(
       location: {
         type: String,
       },
-      age : {
-        type : Number,
-      }
+      age: {
+        type: Number,
+      },
+      experience: {
+        type: String,
+      },
+      projects: {
+        type: Number,
+      },
+      completedProjects: {
+        type: Number,
+      },
+      languages: [
+        {
+          type: String,
+        },
+      ],
+      skills: [
+        {
+          type: String,
+        },
+      ],
+      myCV: {
+        type: String,
+      },
+      portfolio: {
+        type: String,
+      },
     },
   },
   {
     timestamps: true,
   }
 );
+
+export const userModel =
+  mongoose.models.Users || mongoose.model("User", userSchema);
