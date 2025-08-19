@@ -89,7 +89,6 @@ const getProjects = async (req, res) => {
     const userId = "689de84fc77bd991fcb9ea72";
 
     const cachedProjects = await redis.get("projects");
-    console.log("cachedProjects", JSON.parse(cachedProjects));
     if (cachedProjects) {
       return res.status(200).json({
         message: "projects fetched successfully!",
@@ -148,8 +147,6 @@ const getSingleProjects = async (req, res) => {
         success: false,
       });
     }
-
-    console.log("projects", projects);
 
     const parsedCachedProject = JSON.stringify(projects);
 
@@ -246,7 +243,7 @@ const deleteProjects = async (req, res) => {
 
     const cachedProject = await redis.get(`projects/${projectId}`);
     console.log("cachedProject", cachedProject);
-    const parsedCachedProject = JSON.parse(cachedProject);
+    const parsedCachedProject = await JSON.parse(cachedProject);
     await deleteImage(parsedCachedProject?.cloudinaryPublicId);
     if (cachedProject) {
       await redis.del(`projects/${projectId}`);
