@@ -6,6 +6,7 @@ import connectDB from "./utils/db.js";
 import userRoute from "./routes/user.route.js";
 import serviceRoute from "./routes/service.route.js";
 import projectRoute from "./routes/projects.route.js";
+import contactRoute from "./routes/contact.route.js";
 
 dotenv.config();
 
@@ -27,6 +28,7 @@ app.use(cors(corsOption));
 app.use("/api/v1/auth", userRoute);
 app.use("/api/v1/service", serviceRoute);
 app.use("/api/v1/project", projectRoute);
+app.use("/api/v1/contact", contactRoute);
 
 app.get("/", (_, res) => {
   try {
