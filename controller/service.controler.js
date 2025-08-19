@@ -9,7 +9,7 @@ const createService = async (req, res) => {
     const { title, coverImageUrl, price, startDate, endDate, description } =
       req.body;
     const coverImageFile = req.file;
-    const userId = "689de84fc77bd991fcb9ea72";
+    const userId = req.userId;
 
     if (!title || !price || !startDate || !endDate || !description) {
       return res.status(404).json({
@@ -84,7 +84,7 @@ const createService = async (req, res) => {
 
 const getService = async (req, res) => {
   try {
-    const userId = "689de84fc77bd991fcb9ea72";
+    const userId = req.userId;
 
     const cachedServices = await redis.get("services");
 
@@ -208,12 +208,18 @@ const updateService = async (req, res) => {
     const updatedService = await serviceModel.findByIdAndUpdate(
       servicesId,
       {
-        title,
-        coverImage: fileUrl.secure_url || coverImageUrl,
-        cloudinaryPublicId: fileUrl.public_id,
-        price,
-        startDate: startDateScheduled,
-        endDate: endDateScheduled,
+        title: title ? title : service.title,
+        coverImage: coverImageUrl
+          ? coverImageUrl
+          : fileUrl
+          ? fileUrl.secure_url
+          : service.coverImage,
+        cloudinaryPublicId: fileUrl?.public_id
+          ? fileUrl.public_id
+          : service.cloudinaryPublicId,
+        price: price ? price : service.price,
+        startDate: startDateScheduled ? startDateScheduled : service.startDate,
+        endDate: endDateScheduled ? endDateScheduled : service.endDate,
         description,
       },
       { new: true }

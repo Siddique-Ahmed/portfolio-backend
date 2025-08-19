@@ -11,10 +11,14 @@ import { singleUploaded } from "../middlewares/multer.js";
 
 const routes = Router();
 
-routes.route("/create-service").post(singleUploaded.single("coverImage"),createService);
-routes.route("/get-service").get(getService);
-routes.route("/get-service/:id").get(getSingleService);
-routes.route("/update-service/:id").put(singleUploaded.single("coverImage"),updateService);
-routes.route("/delete-service/:id").delete(deleteService);
+routes
+  .route("/create-service")
+  .post(isAuthenticated, singleUploaded.single("coverImage"), createService);
+routes.route("/get-service").get(isAuthenticated, getService);
+routes.route("/get-service/:id").get(isAuthenticated, getSingleService);
+routes
+  .route("/update-service/:id")
+  .put(isAuthenticated, singleUploaded.single("coverImage"), updateService);
+routes.route("/delete-service/:id").delete(isAuthenticated, deleteService);
 
 export default routes;

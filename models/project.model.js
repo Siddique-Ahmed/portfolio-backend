@@ -11,6 +11,14 @@ const ProjectSchema = new mongoose.Schema(
     coverImage: {
       type: String,
     },
+    cloudinaryPublicId: {
+      type: String,
+    },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
     liveUrl: {
       type: String,
     },
