@@ -1,13 +1,14 @@
 import { serviceModel } from "../models/service.model.js";
 import { userModel } from "../models/user.model.js";
 import { deleteImage, uploadImage } from "../utils/cloudinary.js";
+import { getDataUri } from "../utils/datauri.js";
 import redis from "../utils/redisClient.js";
 
 const createService = async (req, res) => {
   try {
     const { title, coverImageUrl, price, startDate, endDate, description } =
       req.body;
-    const converImage = req.file;
+    const coverImageFile = req.file;
     const userId = "689de84fc77bd991fcb9ea72";
 
     if (!title || !price || !startDate || !endDate || !description) {
@@ -17,14 +18,16 @@ const createService = async (req, res) => {
       });
     }
 
-    if (!coverImageUrl || !converImage) {
+    if (!coverImageUrl && !coverImageFile) {
       return res.status(401).json({
         message: "image is required!",
         success: false,
       });
     }
 
-    const fileUrl = await uploadImage(converImage, "/services");
+    const fileContentUrl = getDataUri(coverImageFile);
+
+    const fileUrl = await uploadImage(fileContentUrl, "/services");
 
     if (!fileUrl) {
       return res.status(401).json({
@@ -35,6 +38,13 @@ const createService = async (req, res) => {
 
     const startDateScheduled = new Date(startDate);
     const endDateScheduled = new Date(endDate);
+
+    if (isNaN(startDateScheduled) || isNaN(endDateScheduled)) {
+      return res.status(400).json({
+        message: "Start date or end date is invalid format!",
+        success: false,
+      });
+    }
 
     const user = await userModel.findById(userId);
 
@@ -52,6 +62,8 @@ const createService = async (req, res) => {
       startDate: startDateScheduled,
       endDate: endDateScheduled,
       coverImage: fileUrl ? fileUrl.secure_url : coverImageUrl,
+      cloudinaryPublicId: fileUrl.public_id,
+      userId,
     });
 
     await services.save();
@@ -77,14 +89,20 @@ const getService = async (req, res) => {
     const cachedServices = await redis.get("services");
 
     if (cachedServices) {
-      return res.status(201).json({
-        message: "services fetched from DB",
-        success: true,
-        data: JSON.parse(cachedServices),
-      });
+      const parsedService = JSON.parse(cachedServices);
+
+      if (Array.isArray(parsedService) && parsedService.length > 0) {
+        return res.status(201).json({
+          message: "services fetched from DB",
+          success: true,
+          data: JSON.parse(cachedServices),
+        });
+      }
     }
 
     const services = await serviceModel.find({ userId });
+
+    console.log("check service =>", services);
 
     if (!services) {
       return res.status(404).json({
@@ -150,7 +168,7 @@ const updateService = async (req, res) => {
   try {
     const { title, coverImageUrl, price, startDate, endDate, description } =
       req.body;
-    const converImage = req.file;
+    const coverImage = req.file;
     const servicesId = req.params.id;
 
     const service = await serviceModel.findById(servicesId);
@@ -162,10 +180,13 @@ const updateService = async (req, res) => {
       });
     }
 
-    await deleteImage(service.coverImage);
+    await deleteImage(service.cloudinaryPublicId);
+
     await redis.del(`services/${servicesId}`);
 
-    const fileUrl = await uploadImage(converImage, "/service");
+    const fileContentUrl = getDataUri(coverImage);
+
+    const fileUrl = await uploadImage(fileContentUrl, "/services");
 
     if (!fileUrl) {
       return res.status(404).json({
@@ -177,11 +198,19 @@ const updateService = async (req, res) => {
     const startDateScheduled = new Date(startDate);
     const endDateScheduled = new Date(endDate);
 
+    if (isNaN(startDateScheduled) || isNaN(endDateScheduled)) {
+      return res.status(400).json({
+        message: "Start date or end date is invalid format!",
+        success: false,
+      });
+    }
+
     const updatedService = await serviceModel.findByIdAndUpdate(
       servicesId,
       {
         title,
-        coverImage: fileUrl || coverImageUrl,
+        coverImage: fileUrl.secure_url || coverImageUrl,
+        cloudinaryPublicId: fileUrl.public_id,
         price,
         startDate: startDateScheduled,
         endDate: endDateScheduled,
@@ -212,7 +241,7 @@ const deleteService = async (req, res) => {
     const serviceObj = getRedisService ? JSON.parse(getRedisService) : null;
 
     if (serviceObj?.coverImage) {
-      await deleteImage(serviceObj.coverImage);
+      await deleteImage(serviceObj.cloudinaryPublicId);
     }
 
     await redis.del(`services/${serviceId}`);

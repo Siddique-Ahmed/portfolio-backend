@@ -24,6 +24,9 @@ const serviceSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
+    cloudinaryPublicId: {
+      type: String,
+    },
   },
   {
     timestamps: true,

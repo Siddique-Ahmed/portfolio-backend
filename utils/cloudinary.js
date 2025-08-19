@@ -15,22 +15,17 @@ export const uploadImage = async (file, folderName) => {
     const uploadedFile = await cloudinary.uploader.upload(file, {
       folder: folderName,
     });
-    return uploadedFile.secure_url;
+    return uploadedFile;
   } catch (error) {
     return error.message;
   }
 };
 
-export const deleteImage = async (imageUrl) => {
+export const deleteImage = async (public_id) => {
   try {
-    if (!imageUrl) throw new Error("imageUrl is required!");
+    if (!public_id) throw new Error("public id is required!");
 
-    const parts = imageUrl.split("/");
-    const fileWithExt = parts.pop();
-    const folder = parts.slice(parts.indexOf("upload") + 1).join("/");
-    const publicId = `${folder}/${fileWithExt.split(".")[0]}`;
-
-    const result = await cloudinary.uploader.destroy(publicId);
+    const result = await cloudinary.uploader.destroy(public_id);
     return result;
   } catch (error) {
     return error.message;
