@@ -23,11 +23,11 @@ app.use(cookieParser());
 app.use(cors(corsOption));
 
 app.use("/", (_, res) => {
-  res.status(200).json({
-    message: "Backend is Running Successfully!",
-    success: true,
-  });
   try {
+    res.status(200).json({
+      message: "Backend is Running Successfully!",
+      success: true,
+    });
   } catch (error) {
     res.status(500).json({
       message: error.message,

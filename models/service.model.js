@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const serviceSchema = new mongoose.Schema(
   {
-    logo: {
+    coverImage: {
       type: String,
     },
     title: {
@@ -19,6 +19,10 @@ const serviceSchema = new mongoose.Schema(
     },
     endDate: {
       type: Date,
+    },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
   },
   {

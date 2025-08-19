@@ -10,11 +10,10 @@ import {
 
 const routes = Router();
 
-routes.route("/create-service").post(isAuthenticated, createService);
-routes.route("/get-service").post(isAuthenticated, getService);
-routes.route("/get-service/:id").post(isAuthenticated, getSingleService);
-routes.route("/update-service/:id").post(isAuthenticated, updateService);
-routes.route("/delete-service/:id").post(isAuthenticated, deleteService);
+routes.route("/create-service").post(createService);
+routes.route("/get-service").post(getService);
+routes.route("/get-service/:id").post(getSingleService);
+routes.route("/update-service/:id").post(updateService);
+routes.route("/delete-service/:id").post(deleteService);
 
-
-export default routes
+export default routes;
