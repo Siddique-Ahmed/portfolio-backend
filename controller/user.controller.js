@@ -171,7 +171,7 @@ const updateProfile = async (req, res) => {
       age,
     } = req.body;
 
-    const files = req.files; // { profilePic: [..], myCV: [..] }
+    const files = req.files;
     const userId = req.userId;
 
     const user = await userModel.findById(userId);
@@ -208,6 +208,25 @@ const updateProfile = async (req, res) => {
       updateCV = await uploadImage(dataUriCV);
     }
 
+    let parsedLanguages = user?.profile?.languages;
+    let parsedSkills = user?.profile?.skills;
+
+    try {
+      if (languages) {
+        parsedLanguages = JSON.parse(languages);
+      }
+    } catch (err) {
+      parsedLanguages = languages.split(",").map((l) => l.trim());
+    }
+
+    try {
+      if (skills) {
+        parsedSkills = JSON.parse(skills);
+      }
+    } catch (err) {
+      parsedSkills = skills.split(",").map((s) => s.trim());
+    }
+
     const updatedUser = {
       email: email ?? user.email,
       cloudinaryPublicId:
@@ -221,8 +240,8 @@ const updateProfile = async (req, res) => {
         projects: projects ?? user.profile.projects,
         bio: bio ?? user.profile.bio,
         description: description ?? user.profile.description,
-        languages: languages ?? user.profile.languages,
-        skills: skills ?? user.profile.skills,
+        languages: parsedLanguages ?? user.profile.languages,
+        skills: parsedSkills ?? user.profile.skills,
         portfolio: portfolio ?? user.profile.portfolio,
         completedProjects: completedProjects ?? user.profile.completedProjects,
         age: age ?? user.profile.age,
