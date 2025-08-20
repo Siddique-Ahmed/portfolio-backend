@@ -61,15 +61,19 @@ const getMail = async (_, res) => {
     const contacts = await redis.get("contacts");
 
     if (contacts) {
-      return res.status(200).json({
-        message: "Contacts fetched successfully!",
-        success: true,
-      });
+      const parsed = JSON.parse(contacts);
+      if (parsed.length > 0) {
+        return res.status(200).json({
+          message: "Contacts fetched successfully!",
+          success: true,
+          data: parsed,
+        });
+      }
     }
 
     const allContacts = await contactModel.find();
 
-    if (!allContacts && allContacts.length === 0) {
+    if (!allContacts || allContacts.length === 0) {
       return res.status(404).json({
         message: "No contacts found!",
         success: false,
@@ -98,6 +102,7 @@ const getMailById = async (req, res) => {
 
     const contact = await redis.get(`contacts/${contactId}`);
 
+    console.log(contact);
     if (contact) {
       return res.status(200).json({
         message: "Contact found successfully!",
@@ -136,6 +141,7 @@ const deleteMail = async (req, res) => {
 
     const contact = await contactModel.findByIdAndDelete(contactId);
     await redis.del(`contacts/${contactId}`);
+    await redis.del(`contacts`);
 
     if (!contact) {
       return res.status(404).json({

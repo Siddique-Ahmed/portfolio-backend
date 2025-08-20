@@ -11,7 +11,13 @@ const userSchema = new Schema(
       type: String,
       required: true,
     },
+    cloudinaryPublicId: {
+      type: String,
+    },
     profile: {
+      profilePic: {
+        type: String,
+      },
       fullName: {
         type: String,
       },

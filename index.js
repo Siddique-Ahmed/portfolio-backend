@@ -7,6 +7,7 @@ import userRoute from "./routes/user.route.js";
 import serviceRoute from "./routes/service.route.js";
 import projectRoute from "./routes/projects.route.js";
 import contactRoute from "./routes/contact.route.js";
+import { connectRedis } from "./utils/redisClient.js";
 
 dotenv.config();
 
@@ -47,7 +48,8 @@ app.get("/", (_, res) => {
 // port
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   connectDB();
+  await connectRedis();
   console.log(`Backend is running on port ${PORT}`);
 });

@@ -3,6 +3,9 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { verificationModel } from "../models/verifiation.model.js";
 import { generateCode, sendVerificationEmail } from "../methods/methods.js";
+import redis from "../utils/redisClient.js";
+import { getDataUri } from "../utils/datauri.js";
+import { deleteImage, uploadImage } from "../utils/cloudinary.js";
 
 // login user controller
 const loginUser = async (req, res) => {
@@ -51,6 +54,7 @@ const loginUser = async (req, res) => {
       userId: user._id,
       code: otpCode,
     });
+
     if (!otpRecord) {
       return res
         .status(400)
@@ -115,6 +119,14 @@ const verificationCode = async (req, res) => {
 const getuserProfile = async (req, res) => {
   try {
     const userId = req.userId;
+    const cachedUser = await redis.get(`users/${userId}`);
+
+    if (cachedUser) {
+      return res.status(200).json({
+        user: JSON.parse(cachedUser),
+        success: true,
+      });
+    }
 
     const user = await userModel.findOne({ _id: userId }).select("-password");
 
@@ -125,7 +137,9 @@ const getuserProfile = async (req, res) => {
       });
     }
 
-    res.status(201).json({
+    await redis.set(`users/${userId}`, JSON.stringify(user));
+
+    return res.status(200).json({
       user,
       success: true,
     });
@@ -137,16 +151,105 @@ const getuserProfile = async (req, res) => {
   }
 };
 
+// update profile controller
+const updateProfile = async (req, res) => {
+  try {
+    const {
+      email,
+      fullName,
+      phoneNumber,
+      location,
+      experience,
+      projects,
+      bio,
+      description,
+      languages,
+      skills,
+      myCV,
+      portfolio,
+      completedProjects,
+      age,
+    } = req.body;
+    const profilePic = req.file;
+    const userId = req.userId;
+
+    if (!profilePic) {
+      return res.status(400).json({
+        message: "Profile picture is required!",
+        success: false,
+      });
+    }
+
+    const user = await userModel.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found!",
+        success: false,
+      });
+    }
+
+    await deleteImage(user.cloudinaryPublicId);
+
+    const dataUri = getDataUri(profilePic);
+    const updateProfilePic = await uploadImage(dataUri);
+
+    const updatedUser = {
+      email: email ?? user.email,
+      cloudinaryPublicId:
+        updateProfilePic?.public_id ?? user.cloudinaryPublicId,
+      profile: {
+        profilePic: updateProfilePic?.secure_url ?? user.profile.profilePic,
+        fullName: fullName ?? user.profile.fullName,
+        phoneNumber: phoneNumber ?? user.profile.phoneNumber,
+        location: location ?? user.profile.location,
+        experience: experience ?? user.profile.experience,
+        projects: projects ?? user.profile.projects,
+        bio: bio ?? user.profile.bio,
+        description: description ?? user.profile.description,
+        languages: languages ?? user.profile.languages,
+        skills: skills ?? user.profile.skills,
+        myCV: myCV ?? user.profile.myCV,
+        portfolio: portfolio ?? user.profile.portfolio,
+        completedProjects: completedProjects ?? user.profile.completedProjects,
+        age: age ?? user.profile.age,
+      },
+    };
+
+    const updated = await userModel.findByIdAndUpdate(userId, updatedUser, {
+      new: true,
+    });
+
+    await redis.set(`users/${userId}`, JSON.stringify(updated));
+    return res.status(200).json({
+      message: "Profile updated successfully!",
+      user: updated,
+      success: true,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message,
+      success: false,
+    });
+  }
+};
+
+// logout controller
 const logout = async (req, res) => {
   try {
+    const userId = req.userId;
+    await redis.del(`users/${userId}`);
     return res
-      .status(201)
+      .status(200)
       .cookie("token", "", {
         maxAge: 0,
+        httpOnly: true,
+        sameSite: "strict",
+        secure: true,
       })
       .json({
         message: "logout successfully!",
-        success: false,
+        success: true,
       });
   } catch (error) {
     return res.status(500).json({
@@ -155,4 +258,6 @@ const logout = async (req, res) => {
     });
   }
 };
-export { loginUser, verificationCode, getuserProfile, logout };
+
+// Exporting all controllers
+export { loginUser, verificationCode, getuserProfile, logout, updateProfile };
