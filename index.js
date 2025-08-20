@@ -13,18 +13,20 @@ dotenv.config();
 
 const app = express();
 
-// ✅ CORS config
-const corsOptions = {
-  origin: ["http://localhost:5173", "https://portfolio-siddique.vercel.app"],
+const corsOption = {
+  origin:
+    process.env.NODE_ENV === "production"
+      ? [process.env.FRONTEND_URL]
+      : ["http://localhost:5173", "http://localhost:3000"],
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   allowedHeaders: ["Content-Type", "Authorization"],
 };
 
-app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(cors(corsOption));
 
 // routes
 app.use("/api/v1/auth", userRoute);
