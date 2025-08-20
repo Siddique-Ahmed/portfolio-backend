@@ -153,7 +153,6 @@ const getuserProfile = async (req, res) => {
   }
 };
 
-// update profile controller
 const updateProfile = async (req, res) => {
   try {
     const {
@@ -167,20 +166,13 @@ const updateProfile = async (req, res) => {
       description,
       languages,
       skills,
-      myCV,
       portfolio,
       completedProjects,
       age,
     } = req.body;
-    const profilePic = req.file;
-    const userId = req.userId;
 
-    if (!profilePic) {
-      return res.status(400).json({
-        message: "Profile picture is required!",
-        success: false,
-      });
-    }
+    const files = req.files; // { profilePic: [..], myCV: [..] }
+    const userId = req.userId;
 
     const user = await userModel.findById(userId);
 
@@ -191,10 +183,30 @@ const updateProfile = async (req, res) => {
       });
     }
 
-    await deleteImage(user.cloudinaryPublicId);
+    let updateProfilePic = null;
+    let updateCV = null;
 
-    const dataUri = getDataUri(profilePic);
-    const updateProfilePic = await uploadImage(dataUri);
+    // === Handle Profile Pic ===
+    if (files?.profilePic && files.profilePic.length > 0) {
+      // purani image delete
+      if (user.cloudinaryPublicId) {
+        await deleteImage(user.cloudinaryPublicId);
+      }
+
+      const dataUriPic = getDataUri(files.profilePic[0]);
+      updateProfilePic = await uploadImage(dataUriPic);
+    }
+
+    // === Handle CV ===
+    if (files?.myCV && files.myCV.length > 0) {
+      // agar pehle se CV public id save hai to usko delete karo
+      if (user.profile?.cvPublicId) {
+        await deleteImage(user.profile.cvPublicId);
+      }
+
+      const dataUriCV = getDataUri(files.myCV[0]);
+      updateCV = await uploadImage(dataUriCV);
+    }
 
     const updatedUser = {
       email: email ?? user.email,
@@ -211,10 +223,13 @@ const updateProfile = async (req, res) => {
         description: description ?? user.profile.description,
         languages: languages ?? user.profile.languages,
         skills: skills ?? user.profile.skills,
-        myCV: myCV ?? user.profile.myCV,
         portfolio: portfolio ?? user.profile.portfolio,
         completedProjects: completedProjects ?? user.profile.completedProjects,
         age: age ?? user.profile.age,
+
+        // === CV update ===
+        myCV: updateCV?.secure_url ?? user.profile.myCV,
+        cvPublicId: updateCV?.public_id ?? user.profile.cvPublicId,
       },
     };
 
@@ -222,7 +237,9 @@ const updateProfile = async (req, res) => {
       new: true,
     });
 
+    // Redis cache update
     await redis.set(`users/${userId}`, JSON.stringify(updated));
+
     return res.status(200).json({
       message: "Profile updated successfully!",
       user: updated,

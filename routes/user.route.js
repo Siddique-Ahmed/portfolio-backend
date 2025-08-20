@@ -15,9 +15,20 @@ const routes = Router();
 routes.route("/login").post(loginUser);
 routes.route("/generate-code").post(verificationCode);
 routes.route("/check-auth").get(isAuthenticated, checAuth);
-routes
-  .route("/update-profile")
-  .put(isAuthenticated, singleUploaded.single("profilePic"), updateProfile);
+routes.route("/update-profile").put(
+  isAuthenticated,
+  singleUploaded.fields([
+    {
+      name: "profilePic",
+      maxCount: 1,
+    },
+    {
+      name: "myCV",
+      maxCount: 1,
+    },
+  ]),
+  updateProfile
+);
 routes.route("/get-profile").get(isAuthenticated, getuserProfile);
 routes.route("/logout").post(isAuthenticated, logout);
 

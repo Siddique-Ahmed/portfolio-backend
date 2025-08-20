@@ -58,6 +58,9 @@ const userSchema = new Schema(
       myCV: {
         type: String,
       },
+      cvPublicId: {
+        type: String,
+      },
       portfolio: {
         type: String,
       },
