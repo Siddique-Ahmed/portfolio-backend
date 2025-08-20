@@ -84,6 +84,8 @@ const verificationCode = async (req, res) => {
   try {
     const { email } = req.body;
 
+    console.log("Email:", email);
+
     if (!email) {
       return res.status(404).json({
         message: "email is required to get verification code",
@@ -234,6 +236,14 @@ const updateProfile = async (req, res) => {
   }
 };
 
+// check auth controller
+const checAuth = async (req, res) => {
+  res.json({
+    success: true,
+    user: req.userId,
+  });
+};
+
 // logout controller
 const logout = async (req, res) => {
   try {
@@ -260,4 +270,11 @@ const logout = async (req, res) => {
 };
 
 // Exporting all controllers
-export { loginUser, verificationCode, getuserProfile, logout, updateProfile };
+export {
+  loginUser,
+  verificationCode,
+  getuserProfile,
+  logout,
+  updateProfile,
+  checAuth,
+};
