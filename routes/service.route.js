@@ -6,7 +6,7 @@ import {
   getService,
   getSingleService,
   updateService,
-} from "../controller/service.controler.js";
+} from "../controller/service.controller.js";
 import { singleUploaded } from "../middlewares/multer.js";
 
 const routes = Router();

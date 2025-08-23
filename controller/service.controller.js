@@ -11,6 +11,8 @@ const createService = async (req, res) => {
     const coverImageFile = req.file;
     const userId = req.userId;
 
+    console.log("check cover img file", coverImageFile);
+
     if (!title || !price || !startDate || !endDate || !description) {
       return res.status(404).json({
         message: "all fields are required!",
@@ -92,7 +94,7 @@ const getService = async (req, res) => {
       const parsedService = JSON.parse(cachedServices);
 
       if (Array.isArray(parsedService) && parsedService.length > 0) {
-        return res.status(201).json({
+        return res.status(200).json({
           message: "services fetched from DB",
           success: true,
           data: JSON.parse(cachedServices),
